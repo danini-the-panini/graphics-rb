@@ -1,0 +1,17 @@
+require 'ffi'
+
+module FFIUtils
+  def strarr array
+    strptrs = []
+    array.each do |str|
+      strptrs << FFI::MemoryPointer.from_string(str)
+    end
+
+    argv = FFI::MemoryPointer.new :pointer, strptrs.length
+    strptrs.each_with_index do |p, i|
+     argv[i].put_pointer 0, p
+    end
+
+    argv
+  end
+end

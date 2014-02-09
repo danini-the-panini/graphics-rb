@@ -8,6 +8,11 @@ require_relative './matrices.rb'
 require 'docile'
 
 require_relative './viewport.rb'
+require_relative './camera.rb'
+require_relative './lense.rb'
+require_relative './perspective.rb'
+require_relative './orthographic.rb'
+require_relative './shader.rb'
 
 OpenGL.load_dll
 GLFW.load_dll
@@ -17,6 +22,11 @@ include GLFW
 
 module Graphics
   include Viewport
+  include Camera
+  include Lense
+  include Perspective
+  include Orthographic
+  include Shader
 
   glfwInit
 
@@ -39,19 +49,20 @@ module Graphics
       @width = opt[:width] ||= 800
       @height = opt[:height] ||= 600
       opt[:title] ||= "OpenGL App"
-      @handle = glfwCreateWindow( @width, @height, opt[:title], nil, nil )
 
-      yield
+      @handle = glfwCreateWindow( @width, @height, opt[:title], nil, nil )
 
       glfwMakeContextCurrent @handle
       glfwSetKeyCallback @handle, @@esc_to_exit_callback
+
+      yield
 
       glEnable GL_SCISSOR_TEST
 
       while glfwWindowShouldClose(@handle) == 0
 
-        width_ptr = '        '
-        height_ptr = '        '
+        width_ptr = ' '*8
+        height_ptr = ' '*8
         glfwGetFramebufferSize @handle, width_ptr, height_ptr
         @width = width_ptr.unpack('L')[0]
         @height = height_ptr.unpack('L')[0]
@@ -63,7 +74,10 @@ module Graphics
           glClearColor *vp.bg
           glClear GL_COLOR_BUFFER_BIT
 
-          ratio = w.to_f / h.to_f
+          aspect = w.to_f / h.to_f
+
+          current_shader.update_mat4 :view, cameras[vp.camera].view unless cameras[vp.camera].nil?
+          current_shader.update_mat4 :projection, lenses[vp.lense].projection(aspect) unless lenses[vp.lense].nil?
 
           vp.block.yield
 
