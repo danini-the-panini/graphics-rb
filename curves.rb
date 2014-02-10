@@ -53,8 +53,8 @@ window :main do
     end
 
     mesh :spline do
-      lathe :a
-      # sweep :a, :b
+      lathe :a, {step_s: 0.01, step_t: 0.01}
+      # sweep :a, :b, {step_s: 0.01, step_t: 0.01}
     end
 
     viewport :main do

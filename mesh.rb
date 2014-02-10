@@ -161,21 +161,24 @@ module Mesh
       face 2, 0, 3
     end
 
-    def sweep s, t, step_a=0.1, step_b=0.1
+    def sweep s, t, o={}
+      step_s = o[:step_s] || 0.1
+      step_t = o[:step_t] || 0.1
+
       spl_s = splines[s]
       spl_t = splines[t]
 
-      (0..1).step(step_a) do |i|
-        (0..1).step(step_b) do |j|
+      (0..1).step(step_s) do |i|
+        (0..1).step(step_t) do |j|
           pointv spl_s.p(i) + spl_t.p(j)
           normal 0, 1, 0 # todo: work out normal
         end
       end
-      (0..1/step_a-1).each do |i|
-        (0..1/step_b-1).each do |j|
-          a = 1/step_b*i + j
+      (0..1/step_s-1).each do |i|
+        (0..1/step_t-1).each do |j|
+          a = 1/step_t*i + j
           b = a + 1
-          c = a + 1/step_b
+          c = a + 1/step_t
           d = c + 1
           face a, b, d
           face a, d, c
@@ -207,21 +210,26 @@ module Mesh
       self
     end
 
-    def lathe s, step_s=0.1, step_a=0.1, angle=360.0, axis=Vector[0,1,0]
+    def lathe s, o={}
+      step_s = o[:step_s] || 0.1
+      step_t = o[:step_t] || 0.1
+      angle = o[:angle] || 360
+      axis = o[:axis] || Vector[0,1,0]
+
       spl = splines[s]
 
       (0..1).step(step_s) do |i|
-        (0..1).step(step_a) do |j|
+        (0..1).step(step_t) do |j|
           p = Matrices.rotate(Matrix.I(4), j*angle, axis) * spl.p(i).to_pnt
           point p.x, p.y, p.z
           normal 0, 1, 0 # todo: work out normal
         end
       end
       (0..1/step_s-1).each do |i|
-        (0..1/step_a-1).each do |j|
-          a = 1/step_a*i + j
+        (0..1/step_t-1).each do |j|
+          a = 1/step_t*i + j
           b = a + 1
-          c = a + 1/step_a
+          c = a + 1/step_t
           d = c + 1
           face a, b, d
           face a, d, c
@@ -230,7 +238,11 @@ module Mesh
       self
     end
 
-    def lathe_simple s, step=0.1, angle=360.0, axis=Vector[0,1,0]
+    def lathe_simple s, o={}
+      step = o[:step] || 0.1
+      angle = o[:angle] || 360
+      axis = o[:axis] || Vector[0,1,0]
+
       spl = splines[s]
 
       (0...size).each do |i|
