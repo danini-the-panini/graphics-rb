@@ -7,10 +7,46 @@ module Camera
 
   def cameras; @@cameras; end
 
-  class Camera < Struct.new(:eye, :at, :up)
+  class Camera
+
+    def initialize _eye, _at, _up
+      @eye = _eye; @at = _at; @up = _up
+      recalc
+    end
 
     def view
       Matrices.look_at eye, at, up
+    end
+
+    def eye= v
+      @eye = v
+      recalc
+      @eye
+    end
+
+    def at= v
+      @at = v
+      recalc
+      @at
+    end
+
+    def up= v
+      @up = v
+      recalc
+      @up
+    end
+
+    def eye; @eye; end
+    def at; @at; end
+    def up; @up; end
+
+    def d; @d; end
+    def right; @right; end
+
+    private
+    def recalc
+      @d = @at - @eye
+      @right = @d.cross @up
     end
 
   end
