@@ -15,93 +15,52 @@ window :main do
       fragment 'fragment.glsl'
     end
 
-    camera :cam_a do
+    camera :main do
       eye 5, 3, 5
       at 0, 0, 0
       up 0, 1, 0
     end
 
-    perspective :cam_a do
+    perspective :main do
       fovy 45
       z_near 0.5
       z_far 100
     end
 
-    add_control CameraControl.new :cam_a
+    add_control CameraControl.new :main
 
     mesh :cube do
-      point -1, -1, -1
-      point -1, -1,  1
-      point  1, -1,  1
-      point  1, -1, -1
-      point -1,  1, -1
-      point -1,  1,  1
-      point  1,  1,  1
-      point  1,  1, -1
-
-      normal 0, 1, 0
-      normal 0, 1, 0
-      normal 0, 1, 0
-      normal 0, 1, 0
-      normal 0, 1, 0
-      normal 0, 1, 0
-      normal 0, 1, 0
-      normal 0, 1, 0
-
-      # top
-      face 0, 1, 2
-      face 0, 2, 3
-
-      # bottom
-      face 5, 4, 6
-      face 6, 4, 7
-
-      # right
-      face 6, 7, 2
-      face 2, 7, 3
-
-      # left
-      face 4, 5, 1
-      face 4, 1, 0
-
-      # front
-      face 1, 5, 6
-      face 1, 6, 2
-
-      # back
-      face 4, 0, 7
-      face 7, 0, 3
+      cube
     end
 
     mesh :quad do
-      point -1, -1, -1
-      point -1, -1,  1
-      point  1, -1,  1
-      point  1, -1, -1
-
-      normal 0, 1, 0
-      normal 0, 1, 0
-      normal 0, 1, 0
-      normal 0, 1, 0
-
-      face 1, 0, 2
-      face 2, 0, 3
+      quad
     end
 
-    spline_a = Spline.new([
-      Vector[1,4,0], Vector[4,1,0], Vector[1,-4,0], Vector[4,-6,0]
-    ])
+    spline :a do
+      control_point 1, 4, 0
+      control_point 4, 1, 0
+      control_point 1,-4, 0
+      control_point 4,-6, 0
+    end
 
-    spline_b = Spline.new([
-      Vector[1,0,0], Vector[0,0,1], Vector[-1,0,0], Vector[0,0,-1]
-    ])
+    spline :b do
+      control_point  1, 0, 0
+      control_point  0, 0, 1
+      control_point -1, 0, 0
+      control_point  0, 0,-1
+      control_point  1, 0, 0
+    end
 
-    spline_a.lathe :spline, step=0.01
+    mesh :spline do
+      lathe :a
+      # sweep :a, :b
+    end
 
-    viewport :top_left do
+    viewport :main do
       bg 0, 1, 1
-      use_camera :cam_a
-      use_lense :cam_a
+      use_camera :main
+      use_lense :main
 
       before_each_frame do
         use_shader :simple
@@ -121,9 +80,10 @@ window :main do
 
         draw :spline
 
-        current_shader.update_mat4 :world, Matrices.scale(Matrix.I(4), Vector[5,1,5])
-        current_shader.update_vec3 :in_colour, Vector[0,1,0]
-        draw :quad
+        # current_shader.update_mat4 :world, Matrices.scale(Matrix.I(4), Vector[5,1,5])
+        # current_shader.update_vec3 :in_colour, Vector[0,1,0]
+
+        # draw :quad
 
         @cube_angle += 1
       end

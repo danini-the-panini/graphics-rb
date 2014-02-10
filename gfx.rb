@@ -31,6 +31,7 @@ module Graphics
   include Orthographic
   include Shader
   include Mesh
+  include Spline
 
   glfwInit
 
