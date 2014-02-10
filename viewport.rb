@@ -5,7 +5,8 @@ module Viewport
 
   def viewports; @@viewports; end
 
-  Viewport = Struct.new(:top, :left, :width, :height, :block, :bg, :camera, :lense)
+  Viewport = Struct.new(:top, :left, :width, :height, :block, :block_before,
+    :bg, :camera, :lense)
 
   class ViewportBuilder
     def initialize
@@ -13,6 +14,7 @@ module Viewport
       @width = @height = 1.0
       @bg = Vector[0,0,0,0]
       @block = lambda {}
+      @block_before = lambda {}
       @camera = @lense = nil
     end
     def top(v); @top = v; self; end
@@ -23,8 +25,9 @@ module Viewport
     def use_camera(v); @camera = v; self; end
     def use_lense(v); @lense = v; self; end
     def each_frame(&v); @block = v; self; end
+    def before_each_frame(&v); @block_before = v; self; end
     def build
-      Viewport.new @top, @left, @width, @height, @block, @bg
+      Viewport.new @top, @left, @width, @height, @block, @block_before, @bg, @camera, @lense
     end
   end
 

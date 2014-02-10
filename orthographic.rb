@@ -3,6 +3,8 @@ require 'matrix'
 require_relative './matrices.rb'
 require_relative './lense.rb'
 
+include Matrices
+
 module Orthographic
 
   class Orthographic < Struct.new(:left, :right, :bottom, :top, :z_near, :z_far)

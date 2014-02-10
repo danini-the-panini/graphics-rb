@@ -11,14 +11,21 @@ include GLFW
 include FFIUtils
 
 module Shader
+  POSITION_LOC = 1
+  NORMAL_LOC = 2
+
   @@shaders = {}
   @@current_shader = nil
 
   def shaders; @@shaders; end
   def current_shader; @@current_shader; end
   def use_shader sym
-    @@current_shader = shaders[sym] unless sym.nil? else nil
-    glUseProgram 0 if current_shader.nil?
+    if sym.nil? or shaders[sym].nil?
+      @@current_shader = nil
+      glUseProgram(0)
+    else
+      shaders[sym].use
+    end
   end
 
   def load_shader file, type
@@ -46,12 +53,13 @@ module Shader
       length = ptr.unpack('L')[0]
 
       if length > 0
-          log = ' '*len
-          glGetShaderlog handle, len, ptr, log
-          log.unpack("A#{len}")[0]
+          log = ' '*length
+          glGetShaderInfoLog handle, length, ptr, log
+          log.unpack("A#{length}")[0]
       end
+    else
+      nil
     end
-    nil
   end
 
   def program_log handle
@@ -62,12 +70,13 @@ module Shader
       length = ptr.unpack('L')[0]
 
       if length > 0
-          log = ' '*len
-          glGetProgramlog handle, len, ptr, log
-          log.unpack("A#{len}")[0]
+          log = ' '*length
+          glGetProgramInfoLog handle, length, ptr, log
+          log.unpack("A#{length}")[0]
       end
+    else
+      nil
     end
-    nil
   end
 
   class Shader
@@ -96,22 +105,23 @@ module Shader
 
     def use
       glUseProgram @handle
+      @@current_shader = self
     end
     def find_uniform name
       @uniforms[name] ||= glGetUniformLocation @handle, name.to_s
     end
 
     def update_mat4 name, value
-      glUniformMatrix4fv find_uniform(name), 1, false, value
+      glUniformMatrix4fv find_uniform(name), 1, GL_FALSE, f_arr(value.transpose.to_a.flatten)
     end
     def update_float name, value
       glUniform1f find_uniform(name), value.to_f
     end
     def update_vec3 name, value
-      glUniform3fv find_uniform(name), value
+      glUniform3fv find_uniform(name), 1, f_arr(value.to_a)
     end
     def update_vec4 name, value
-      glUniform4fv find_uniform(name), value
+      glUniform4fv find_uniform(name), 1, f_arr(value.to_a)
     end
     def update_int name, value
       glUniform1i find_uniform(name), value.to_i

@@ -1,6 +1,10 @@
 require 'ffi'
 
 module FFIUtils
+
+  SIZEOF_INT = [1.to_i].pack('i').size
+  SIZEOF_FLOAT = [1.to_f].pack('f').size
+
   def strarr array
     strptrs = []
     array.each do |str|
@@ -13,5 +17,15 @@ module FFIUtils
     end
 
     argv
+  end
+
+  def f_arr array
+    argv = FFI::MemoryPointer.new(:float, array.length)
+    argv.write_array_of_float array
+  end
+
+  def i_arr array
+    argv = FFI::MemoryPointer.new(:uint, array.length)
+    argv.write_array_of_uint array
   end
 end

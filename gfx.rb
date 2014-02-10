@@ -13,6 +13,7 @@ require_relative './lense.rb'
 require_relative './perspective.rb'
 require_relative './orthographic.rb'
 require_relative './shader.rb'
+require_relative './mesh.rb'
 
 OpenGL.load_dll
 GLFW.load_dll
@@ -27,6 +28,7 @@ module Graphics
   include Perspective
   include Orthographic
   include Shader
+  include Mesh
 
   glfwInit
 
@@ -67,20 +69,23 @@ module Graphics
         @width = width_ptr.unpack('L')[0]
         @height = height_ptr.unpack('L')[0]
 
-        viewports.each_value do |vp|
+        viewports.each do |tag, vp|
           x, y, w, h = (@width*vp.left).to_i, (@height*(vp.height-vp.top)).to_i, (@width*vp.width).to_i, (@height*vp.height).to_i
           glViewport x, y, w, h
           glScissor x, y, w, h
           glClearColor *vp.bg
-          glClear GL_COLOR_BUFFER_BIT
+          glClear GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
 
           aspect = w.to_f / h.to_f
 
-          current_shader.update_mat4 :view, cameras[vp.camera].view unless cameras[vp.camera].nil?
-          current_shader.update_mat4 :projection, lenses[vp.lense].projection(aspect) unless lenses[vp.lense].nil?
+          vp.block_before.yield
+
+          unless current_shader.nil?
+            current_shader.update_mat4(:view, cameras[vp.camera].view) unless cameras[vp.camera].nil?
+            current_shader.update_mat4(:projection, lenses[vp.lense].projection(aspect)) unless lenses[vp.lense].nil?
+          end
 
           vp.block.yield
-
         end
 
         glfwSwapBuffers @handle
