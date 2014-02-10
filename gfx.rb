@@ -16,6 +16,7 @@ require_relative './shader.rb'
 require_relative './mesh.rb'
 require_relative './camera_control.rb'
 require_relative './spline.rb'
+require_relative './shape.rb'
 
 OpenGL.load_dll
 GLFW.load_dll
@@ -32,6 +33,7 @@ module Graphics
   include Shader
   include Mesh
   include Spline
+  include Shape
 
   glfwInit
 

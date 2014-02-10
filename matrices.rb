@@ -53,8 +53,8 @@ module Matrices
   end
 
   def Matrices.translate m, v
-    col3 = m.column(0)*v.x + m.column(1)*v.y + m.column(2)*v.w + m.column(3)
-    Matrix.columns [ m.column(0), m.column(1), m.columns(2), col3 ]
+    col3 = m.column(0)*v.x + m.column(1)*v.y + m.column(2)*v.z + m.column(3)
+    Matrix.columns [ m.column(0), m.column(1), m.column(2), col3 ]
   end
 
   def Matrices.rotate m, angle, v

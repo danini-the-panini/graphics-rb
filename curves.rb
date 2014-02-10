@@ -57,6 +57,25 @@ window :main do
       # sweep :a, :b, {step_s: 0.01, step_t: 0.01}
     end
 
+    shape :cube do
+      use_mesh :cube
+      colour 1, 0, 0
+      position 0, 1, 0
+      uniform_scale 2
+    end
+
+    shape :floor do
+      use_mesh :quad
+      colour 0, 1, 0
+      position 0, -6, 0
+      uniform_scale 20
+    end
+
+    shape :spline do
+      use_mesh :spline
+      colour 1, 0, 0
+    end
+
     viewport :main do
       bg 0, 1, 1
       use_camera :main
@@ -66,26 +85,14 @@ window :main do
         use_shader :simple
       end
 
-      @cube_angle = 0
-
       each_frame do
 
-        # current_shader.update_mat4 :world, Matrices.rotate(Matrix.I(4), @cube_angle, Vector[0,1,0])
-        # current_shader.update_vec3 :in_colour, Vector[1,0,1]
+        # draw_shape :cube
+        # shapes[:cube].rotation += Vector[0,1,0]
 
-        # draw :cube
+        draw_shape :spline
 
-        current_shader.update_mat4 :world, Matrix.I(4)
-        current_shader.update_vec3 :in_colour, Vector[1,0,0]
-
-        draw :spline
-
-        # current_shader.update_mat4 :world, Matrices.scale(Matrix.I(4), Vector[5,1,5])
-        # current_shader.update_vec3 :in_colour, Vector[0,1,0]
-
-        # draw :quad
-
-        @cube_angle += 1
+        draw_shape :floor
       end
     end
   end

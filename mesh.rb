@@ -147,10 +147,10 @@ module Mesh
       w = (o[:width] || 1)*0.5
       l = (o[:length] || 1)*0.5
 
-      point -w, -1, -l
-      point -w, -1,  l
-      point  w, -1,  l
-      point  w, -1, -l
+      point -w, 0, -l
+      point -w, 0,  l
+      point  w, 0,  l
+      point  w, 0, -l
 
       normal 0, 1, 0
       normal 0, 1, 0
