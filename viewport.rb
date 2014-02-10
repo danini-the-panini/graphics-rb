@@ -31,7 +31,13 @@ module Viewport
     end
   end
 
-  def viewport sym, &block
-    viewports[sym] = Docile.dsl_eval(ViewportBuilder.new, &block).build
+  def viewport sym=nil, &block
+    unless block_given?
+      viewports[sym]
+    else
+      obj = Docile.dsl_eval(ViewportBuilder.new, &block).build
+      viewports[sym] = obj unless sym.nil?
+      obj
+    end
   end
 end

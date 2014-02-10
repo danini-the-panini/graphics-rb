@@ -31,11 +31,13 @@ module Orthographic
     end
   end
 
-  def orthographic sym, &block
-    Lense::lenses[sym] = if block.nil?
-      OrthographicBuilder.new.build
+  def orthographic sym=nil, &block
+    unless block_given?
+      lenses[sym]
     else
-      Docile.dsl_eval(OrthographicBuilder.new, &block).build
+      obj = Docile.dsl_eval(OrthographicBuilder.new, &block).build
+      lenses[sym] = obj unless sym.nil?
+      obj
     end
   end
 end

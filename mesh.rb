@@ -22,7 +22,7 @@ module Mesh
 
   def meshes; x = @@meshes; end
 
-  def draw sym, type=GL_TRIANGLES
+  def draw_mesh sym, type=GL_TRIANGLES
     mesh = meshes[sym]
     mesh.draw type unless mesh.nil?
   end
@@ -270,7 +270,13 @@ module Mesh
     end
   end
 
-  def mesh sym, &block
-    meshes[sym] = Docile.dsl_eval(MeshBuilder.new, &block).build
+  def mesh sym=nil, &block
+    unless block_given?
+      meshes[sym]
+    else
+      obj = Docile.dsl_eval(MeshBuilder.new, &block).build
+      meshes[sym] = obj unless sym.nil?
+      obj
+    end
   end
 end

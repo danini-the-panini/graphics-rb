@@ -57,21 +57,21 @@ window :main do
       # sweep :a, :b, {step_s: 0.01, step_t: 0.01}
     end
 
-    shape :cube do
+    cube_shape = shape :cube do
       use_mesh :cube
       colour 1, 0, 0
       position 0, 1, 0
       uniform_scale 2
     end
 
-    shape :floor do
+    floor = shape do
       use_mesh :quad
       colour 0, 1, 0
       position 0, -6, 0
       uniform_scale 20
     end
 
-    shape :spline do
+    spline_shape = shape do
       use_mesh :spline
       colour 1, 0, 0
     end
@@ -88,11 +88,11 @@ window :main do
       each_frame do
 
         # draw_shape :cube
-        # shapes[:cube].rotation += Vector[0,1,0]
+        # cube_shape.rotation += Vector[0,1,0]
 
-        draw_shape :spline
+        spline_shape.draw
 
-        draw_shape :floor
+        floor.draw
       end
     end
   end

@@ -143,7 +143,13 @@ module Shader
     end
   end
 
-  def shader sym, &block
-    shaders[sym] = Docile.dsl_eval(ShaderBuilder.new, &block).build
+  def shader sym=nil, &block
+    unless block_given?
+      shaders[sym]
+    else
+      obj = Docile.dsl_eval(ShaderBuilder.new, &block).build
+      shaders[sym] = obj unless sym.nil?
+      obj
+    end
   end
 end

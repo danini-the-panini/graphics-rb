@@ -87,7 +87,13 @@ module Shape
     end
   end
 
-  def shape sym, &block
-    shapes[sym] = Docile.dsl_eval(ShapeBuilder.new, &block).build
+  def shape sym=nil, &block
+    unless block_given?
+      shapes[sym]
+    else
+      obj = Docile.dsl_eval(ShapeBuilder.new, &block).build
+      shapes[sym] = obj unless sym.nil?
+      obj
+    end
   end
 end

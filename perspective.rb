@@ -29,11 +29,13 @@ module Perspective
     end
   end
 
-  def perspective sym, &block
-    Lense::lenses[sym] = if block.nil?
-      PerspectiveBuilder.new.build
+  def perspective sym=nil, &block
+    unless block_given?
+      lenses[sym]
     else
-      Docile.dsl_eval(PerspectiveBuilder.new, &block).build
+      obj = Docile.dsl_eval(PerspectiveBuilder.new, &block).build
+      lenses[sym] = obj unless sym.nil?
+      obj
     end
   end
 end

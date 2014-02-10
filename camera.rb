@@ -67,7 +67,13 @@ module Camera
     end
   end
 
-  def camera sym, &block
-    cameras[sym] = Docile.dsl_eval(CameraBuilder.new, &block).build
+  def camera sym=nil, &block
+    unless block_given?
+      cameras[sym]
+    else
+      obj = Docile.dsl_eval(CameraBuilder.new, &block).build
+      cameras[sym] = obj unless sym.nil?
+      obj
+    end
   end
 end

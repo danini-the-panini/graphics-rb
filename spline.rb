@@ -49,7 +49,13 @@ module Spline
     end
   end
 
-  def spline sym, &block
-    splines[sym] = Docile.dsl_eval(SplineBuilder.new, &block).build
+  def spline sym=nil, &block
+    unless block_given?
+      splines[sym]
+    else
+      obj = Docile.dsl_eval(SplineBuilder.new, &block).build
+      splines[sym] = obj unless sym.nil?
+    end
+    obj
   end
 end
