@@ -42,11 +42,13 @@ module Camera
 
     def d; @d; end
     def right; @right; end
+    def real_up; @real_up; end
 
     private
     def recalc
       @d = @at - @eye
-      @right = @d.cross @up
+      @right = @up.cross @d
+      @real_up = @d.cross @right
     end
 
   end
