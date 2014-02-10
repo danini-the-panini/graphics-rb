@@ -19,10 +19,11 @@ module Mesh
   NORMAL_SIZE = 3
   VERTEX_SIZE = 6
 
-  def meshes; @@meshes; end
+  def meshes; x = @@meshes; end
 
   def draw sym, type=GL_TRIANGLES
-    meshes[sym].draw type
+    mesh = meshes[sym]
+    mesh.draw type unless mesh.nil?
   end
 
   def unbind
@@ -87,8 +88,10 @@ module Mesh
       @normals = []
       @faces = []
     end
-    def point(x,y,z); @points << Vector[x,y,z]; self; end
-    def normal(x,y,z); @normals << Vector[x,y,z]; self; end
+    def pointv(v); @points << v; self; end
+    def point(x,y,z); pointv Vector[x,y,z]; self; end
+    def normalv(v); @normals << v; self; end
+    def normal(x,y,z); normalv Vector[x,y,z]; self; end
     def face(a,b,c); @faces << a << b << c; self; end
     def build
       Mesh.new @points, @normals, @faces

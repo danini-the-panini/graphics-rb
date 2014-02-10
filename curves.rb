@@ -7,9 +7,8 @@ window :main do
   exit_on_close
 
   init do
-    glEnable GL_CULL_FACE
+    glDisable GL_CULL_FACE
     glEnable GL_DEPTH_TEST
-
 
     shader :simple do
       vertex 'vertex.glsl'
@@ -17,14 +16,14 @@ window :main do
     end
 
     camera :cam_a do
-      eye 2, 1.5, 2
+      eye 5, 3, 5
       at 0, 0, 0
       up 0, 1, 0
     end
 
     perspective :cam_a do
-      fovy 10
-      z_near 0.05
+      fovy 45
+      z_near 0.5
       z_far 100
     end
 
@@ -89,6 +88,16 @@ window :main do
       face 2, 0, 3
     end
 
+    spline_a = Spline.new([
+      Vector[1,4,0], Vector[4,1,0], Vector[1,-4,0], Vector[4,-6,0]
+    ])
+
+    spline_b = Spline.new([
+      Vector[1,0,0], Vector[0,0,1], Vector[-1,0,0], Vector[0,0,-1]
+    ])
+
+    spline_a.lathe :spline, step=0.01
+
     viewport :top_left do
       bg 0, 1, 1
       use_camera :cam_a
@@ -102,10 +111,15 @@ window :main do
 
       each_frame do
 
-        current_shader.update_mat4 :world, Matrices.rotate(Matrix.I(4), @cube_angle, Vector[0,1,0])
+        # current_shader.update_mat4 :world, Matrices.rotate(Matrix.I(4), @cube_angle, Vector[0,1,0])
+        # current_shader.update_vec3 :in_colour, Vector[1,0,1]
+
+        # draw :cube
+
+        current_shader.update_mat4 :world, Matrix.I(4)
         current_shader.update_vec3 :in_colour, Vector[1,0,0]
 
-        draw :cube
+        draw :spline
 
         current_shader.update_mat4 :world, Matrices.scale(Matrix.I(4), Vector[5,1,5])
         current_shader.update_vec3 :in_colour, Vector[0,1,0]

@@ -35,6 +35,15 @@ Vector.class_eval do
     p
   end
 
+  def to_dir
+    Vector.Raise ErrDimensionMismatch unless size == 3
+    Vector[ x, y, z, 0 ]
+  end
+  def to_pnt
+    Vector.Raise ErrDimensionMismatch unless size == 3
+    Vector[ x, y, z, 1 ]
+  end
+
 end
 
 module Matrices

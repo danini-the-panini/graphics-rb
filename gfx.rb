@@ -15,6 +15,7 @@ require_relative './orthographic.rb'
 require_relative './shader.rb'
 require_relative './mesh.rb'
 require_relative './camera_control.rb'
+require_relative './spline.rb'
 
 OpenGL.load_dll
 GLFW.load_dll
@@ -59,7 +60,6 @@ module Graphics
   end
 
   def add_control control
-    p "adding control to #{@@handle.inspect}"
     glfwSetKeyCallback(         @@handle, control.key_fun          ) unless control.key_fun.nil?
     glfwSetCharCallback(        @@handle, control.char_fun         ) unless control.char_fun.nil?
     glfwSetMouseButtonCallback( @@handle, control.mouse_button_fun ) unless control.mouse_button_fun.nil?
