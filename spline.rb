@@ -11,13 +11,21 @@ module Spline
     def initialize control_points, degree=4
       @p = control_points
       @k = degree+1
-      @t = (0..1).step( 1/(@p.size-1+@k).to_f ).to_a
+      step = 1/(@p.size).to_f
+      top = step * (@p.size+@k+1)
+      @t = (0..top).step( step ).to_a
+      @t_offset = @t[@k-1]
+      @t_range = @t[@p.size+1] - @t_offset
     end
 
     def [](i); @p[i]; end
     def size; @p.size; end
+    def each_control_point
+      @p.each { |x| yield x }
+    end
 
     def p(t)
+      t = t*@t_range + @t_offset
       sum = Vector.elements([0]*@p[0].size)
       (0...@p.size).each do |i|
         sum += @p[i] * n(i,@k,t)
@@ -39,19 +47,19 @@ module Spline
   class SplineBuilder
     def initialize
       @control_points = []
-      @degrees = 4
+      @degree = 4
     end
-    def control_pointv(v); @control_points << v; self; end
-    def control_point(x,y,z); control_pointv Vector[x,y,z]; self; end
-    def degrees(v); @degrees = v; self; end
+    def control_pointv(v, mult=1); mult.times { @control_points << v }; self; end
+    def control_point(x,y,z, mult=1); control_pointv Vector[x,y,z], mult; self; end
+    def degree(v); @degree = v; self; end
     def build
-      Spline.new @control_points, @degrees
+      Spline.new @control_points, @degree
     end
   end
 
   def spline sym=nil, &block
     unless block_given?
-      splines[sym]
+      obj = splines[sym]
     else
       obj = Docile.dsl_eval(SplineBuilder.new, &block).build
       splines[sym] = obj unless sym.nil?

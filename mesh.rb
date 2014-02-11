@@ -187,29 +187,6 @@ module Mesh
       self
     end
 
-    def sweep_simple s, t
-      spl_s = splines[s]
-      spl_t = splines[t]
-
-      (0...spl_s.size).each do |i|
-        (0...spl_t.size).each do |j|
-          pointv spl_s[i] + spl_t[j]
-          normal 0, 1, 0 # todo: work out normal
-        end
-      end
-      (0...spl_s.size-1).each do |i|
-        (0...spl_t.size-1).each do |j|
-          a = spl_t.size*i + j
-          b = a + 1
-          c = a + spl_t.size
-          d = c + 1
-          face a, b, d
-          face a, d, c
-        end
-      end
-      self
-    end
-
     def lathe s, o={}
       step_s = o[:step_s] || 0.1
       step_t = o[:step_t] || 0.1
@@ -221,6 +198,7 @@ module Mesh
       (0..1).step(step_s) do |i|
         (0..1).step(step_t) do |j|
           p = Matrices.rotate(Matrix.I(4), j*angle, axis) * spl.p(i).to_pnt
+          if p.x+p.y+p.z == 0 then puts "origin at #{i},#{j}" end
           point p.x, p.y, p.z
           normal 0, 1, 0 # todo: work out normal
         end
@@ -230,33 +208,6 @@ module Mesh
           a = 1/step_t*i + j
           b = a + 1
           c = a + 1/step_t
-          d = c + 1
-          face a, b, d
-          face a, d, c
-        end
-      end
-      self
-    end
-
-    def lathe_simple s, o={}
-      step = o[:step] || 0.1
-      angle = o[:angle] || 360
-      axis = o[:axis] || Vector[0,1,0]
-
-      spl = splines[s]
-
-      (0...size).each do |i|
-        (0..1).step(step) do |j|
-          p = Matrices.rotate(Matrix.I(4), j*angle, axis) * spl[i].to_pnt
-          point p.x, p.y, p.z
-          normal 0, 1, 0 # todo: work out normal
-        end
-      end
-      (0...size-1).each do |i|
-        (0..1/step-1).each do |j|
-          a = 1/step*i + j
-          b = a + 1
-          c = a + 1/step
           d = c + 1
           face a, b, d
           face a, d, c

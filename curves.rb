@@ -2,12 +2,13 @@ require_relative './gfx.rb'
 
 include Graphics
 
-window :main do
+window do
   title 'Curves'
   exit_on_close
+  # wireframe
 
   init do
-    glDisable GL_CULL_FACE
+    glEnable GL_CULL_FACE
     glEnable GL_DEPTH_TEST
 
     shader :simple do
@@ -38,10 +39,15 @@ window :main do
     end
 
     spline :a do
+      control_point -0.5,-3.5, 0, 2
+      control_point 3.5, 1.5, 0
+      control_point 0.5, 4.5, 0
+      control_point 6, 6, 0, 2
       control_point 1, 4, 0
       control_point 4, 1, 0
-      control_point 1,-4, 0
-      control_point 4,-6, 0
+      control_point 0,-4, 0, 2
+      control_point 6,-6, 0, 2
+      control_point 0,-6, 0, 2
     end
 
     spline :b do
@@ -76,6 +82,17 @@ window :main do
       colour 1, 0, 0
     end
 
+    cp_shapes = []
+
+    splines[:a].each_control_point do |p|
+      cp_shapes << shape do
+        use_mesh :cube
+        colour 1, 0, 1
+        position p.x, p.y, p.z
+        uniform_scale 0.1
+      end
+    end
+
     viewport :main do
       bg 0, 1, 1
       use_camera :main
@@ -91,6 +108,8 @@ window :main do
         # cube_shape.rotation += Vector[0,1,0]
 
         spline_shape.draw
+
+        cp_shapes.each { |s| s.draw }
 
         floor.draw
       end

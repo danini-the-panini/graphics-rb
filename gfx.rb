@@ -43,10 +43,7 @@ module Graphics
 
   glfwSetErrorCallback @@error_callback
 
-  @@windows = {}
   @@handle = 0
-
-  def windows; @@windows; end
 
   # Press ESC to exit.
   @@esc_to_exit_callback = GLFW::create_callback :GLFWkeyfun do |window, key, scancode, action, mods|
@@ -54,7 +51,6 @@ module Graphics
       glfwSetWindowShouldClose window, 1
     end
   end
-
 
   def gl_begin mode
     glBegin mode
@@ -73,16 +69,18 @@ module Graphics
 
   class Window
 
-    def initialize title, width, height, exit_on_close
+    def initialize title, width, height, exit_on_close, wireframe
       @handle = glfwCreateWindow( width, height, title, nil, nil )
       @@handle = @handle
 
       glfwMakeContextCurrent @handle
       glfwSetKeyCallback @handle, @@esc_to_exit_callback if exit_on_close
 
+      glEnable GL_SCISSOR_TEST
+      glPolygonMode GL_FRONT_AND_BACK, if wireframe then GL_LINE else GL_FILL end
+
       yield
 
-      glEnable GL_SCISSOR_TEST
 
       while glfwWindowShouldClose(@handle) == 0
 
@@ -133,12 +131,13 @@ module Graphics
     def height(v); @height = v; end
     def init(&v); @init_block = v; end
     def exit_on_close(v=true); @exit_on_close = v; end
+    def wireframe(v=true); @wireframe = v; end
     def build
-      Window.new @title, @width, @height, !!@exit_on_close, &@init_block
+      Window.new @title, @width, @height, !!@exit_on_close, !!@wireframe, &@init_block
     end
   end
 
-  def window sym, &block
-    windows[sym] = Docile.dsl_eval(WindowBuilder.new, &block).build
+  def window &block
+    Docile.dsl_eval(WindowBuilder.new, &block).build
   end
 end
