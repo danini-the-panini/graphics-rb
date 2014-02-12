@@ -31,11 +31,15 @@ window do
     add_control CameraControl.new :main
 
     mesh :cube do
-      cube
+      wavefront 'cube.obj'
     end
 
     mesh :quad do
       quad
+    end
+
+    mesh :monkey do
+      wavefront 'monkey.obj'
     end
 
     spline :a do
@@ -58,13 +62,30 @@ window do
       control_point  1, 0, 0
     end
 
+    spline :c do
+      control_point  2,-1, 0
+      control_point  1, 0, 0
+      control_point  2, 1, 0
+      control_point  3, 0, 0
+      control_point  2,-1, 0
+      control_point  1, 0, 0
+      control_point  2, 1, 0
+    end
+
     mesh :spline do
-      lathe :a, {step_s: 0.01, step_t: 0.01}
+      lathe :c, {step_s: 0.01, step_t: 0.01}
       # sweep :a, :b, {step_s: 0.01, step_t: 0.01}
     end
 
     cube_shape = shape :cube do
       use_mesh :cube
+      colour 1, 0, 0
+      position 0, 1, 0
+      uniform_scale 2
+    end
+
+    monkey_shape = shape :monkey do
+      use_mesh :monkey
       colour 1, 0, 0
       position 0, 1, 0
       uniform_scale 2
@@ -84,7 +105,7 @@ window do
 
     cp_shapes = []
 
-    splines[:a].each_control_point do |p|
+    splines[:c].each_control_point do |p|
       cp_shapes << shape do
         use_mesh :cube
         colour 1, 0, 1
@@ -104,10 +125,10 @@ window do
 
       each_frame do
 
-        # draw_shape :cube
-        # cube_shape.rotation += Vector[0,1,0]
+        draw_shape :monkey
+        monkey_shape.rotation += Vector[0,1,0]
 
-        spline_shape.draw
+        # spline_shape.draw
 
         cp_shapes.each { |s| s.draw }
 
