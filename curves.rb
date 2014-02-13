@@ -4,6 +4,7 @@ include Graphics
 
 window do
   title 'Curves'
+  core '3.3.0'
   exit_on_close
   # wireframe
 
@@ -22,6 +23,8 @@ window do
       geometry 'normals.gsh'
       fragment 'flat.fsh'
     end
+
+    use_shader :simple
 
     camera :main do
       eye 5, 3, 5
@@ -85,9 +88,12 @@ window do
       control_point  2,-1, 0
     end
 
+    chosen_spline = :a
+
     mesh :spline do
-      lathe :a, {step_s: 0.01, step_t: 0.01}
+      lathe chosen_spline, {step_s: 0.01, step_t: 0.01}
       # sweep :a, :b, {step_s: 0.01, step_t: 0.01}
+      calculate_normals
     end
 
     cube_shape = shape :cube do
@@ -118,7 +124,7 @@ window do
 
     cp_shapes = []
 
-    splines[:c].each_control_point do |p|
+    splines[chosen_spline].each_control_point do |p|
       cp_shapes << shape do
         use_mesh :cube
         colour 1, 0, 1

@@ -39,8 +39,17 @@ module Graphics
 
   glfwInit
 
+def core v
+  v_split = v.split '.'
+  glfwWindowHint GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE
+  glfwWindowHint GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE
+  glfwWindowHint GLFW_CONTEXT_VERSION_MAJOR, v_split[0].to_i
+  glfwWindowHint GLFW_CONTEXT_VERSION_MINOR, v_split[1].to_i
+  glfwWindowHint GLFW_CONTEXT_REVISION, v_split[2].to_i
+end
+
   @@error_callback = GLFW::create_callback :GLFWerrorfun do |error, description|
-    puts "ERROR #{error}: #{decription}"
+    puts "ERROR #{error}: #{description}"
   end
 
   glfwSetErrorCallback @@error_callback
