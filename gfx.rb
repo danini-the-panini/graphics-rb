@@ -17,6 +17,7 @@ require_relative './mesh.rb'
 require_relative './camera_control.rb'
 require_relative './spline.rb'
 require_relative './shape.rb'
+require_relative './light.rb'
 
 OpenGL.load_dll
 GLFW.load_dll
@@ -34,6 +35,7 @@ module Graphics
   include Mesh
   include Spline
   include Shape
+  include Light
 
   glfwInit
 
@@ -99,14 +101,15 @@ module Graphics
 
           aspect = w.to_f / h.to_f
 
-          vp.block_before.yield
+          vp.shader_blocks.each do |shader, block|
+            use_shader shader
 
-          unless current_shader.nil?
             current_shader.update_mat4(:view, cameras[vp.camera].view) unless cameras[vp.camera].nil?
             current_shader.update_mat4(:projection, lenses[vp.lense].projection(aspect)) unless lenses[vp.lense].nil?
-          end
+            current_shader.update_vec3(:light, lights[vp.light].point) unless lights[vp.light].nil?
 
-          vp.block.yield
+            block.yield
+          end
         end
 
         glfwSwapBuffers @handle

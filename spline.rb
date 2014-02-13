@@ -8,8 +8,30 @@ module Spline
 
   class Spline
 
-    def initialize control_points, degree=4
-      @p = control_points
+    def initialize cp, degree=4, repeats
+      @p = []
+      repeats.each_index do |i|
+        repeats[i].times { @p << cp[i] }
+      end
+      norms = []
+
+      if size == 1
+        norms << Vector[0,1,0]
+      else
+        norms[0] = normal_between cp[0], cp[1]
+        (1...cp.size-1).each do |i|
+          u = normal_between cp[i-1], cp[i]
+          v = normal_between cp[i], cp[i+1]
+          norms[i] = (u + v)*0.5
+        end
+        norms[cp.size-1] = normal_between cp[cp.size-2], cp[cp.size-1]
+      end
+
+      @normals = []
+      repeats.each_index do |i|
+        repeats[i].times { @normals << norms[i] }
+      end
+
       @k = degree+1
       step = 1/(@p.size).to_f
       top = step * (@p.size+@k+1)
@@ -21,14 +43,23 @@ module Spline
     def [](i); @p[i]; end
     def size; @p.size; end
     def each_control_point
+      (0...size).each { |i| yield @p[i], @normals[i] }
       @p.each { |x| yield x }
     end
 
-    def p(t)
+    def point(t)
+      p t, @p
+    end
+
+    def normal(t)
+      p t, @normals
+    end
+
+    def p(t, arr)
       t = t*@t_range + @t_offset
-      sum = Vector.elements([0]*@p[0].size)
-      (0...@p.size).each do |i|
-        sum += @p[i] * n(i,@k,t)
+      sum = Vector.elements([0]*arr[0].size)
+      (0...size).each do |i|
+        sum += arr[i] * n(i,@k,t)
       end
       sum
     end
@@ -42,18 +73,24 @@ module Spline
         raise "k must be positive"
       end
     end
+
+    def normal_between v, u
+      s = u - v
+      Vector[-s.y,s.x,0].normalize
+    end
   end
 
   class SplineBuilder
     def initialize
       @control_points = []
+      @repeats = []
       @degree = 4
     end
-    def control_pointv(v, mult=1); mult.times { @control_points << v }; self; end
+    def control_pointv(v, mult=1); @control_points << v; @repeats << mult; self; end
     def control_point(x,y,z, mult=1); control_pointv Vector[x,y,z], mult; self; end
     def degree(v); @degree = v; self; end
     def build
-      Spline.new @control_points, @degree
+      Spline.new @control_points, @degree, @repeats
     end
   end
 

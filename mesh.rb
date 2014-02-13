@@ -176,7 +176,7 @@ module Mesh
 
       (0..1).step(step_s) do |i|
         (0..1).step(step_t) do |j|
-          pointv spl_s.p(i) + spl_t.p(j)
+          pointv spl_s.point(i) + spl_t.point(j)
           normal 0, 1, 0 # todo: work out normal
         end
       end
@@ -205,9 +205,9 @@ module Mesh
 
       (0..1).step(step_s) do |i|
         (0..1).step(step_t) do |j|
-          p = Matrices.rotate(Matrix.I(4), j*angle, axis) * spl.p(i).to_pnt
-          point p.x, p.y, p.z
-          normal 0, 1, 0 # todo: work out normal
+          rot = Matrices.rotate(Matrix.I(4), j*angle, axis)
+          pointv rot * spl.point(i).to_pnt
+          normalv rot * spl.normal(i).to_dir
         end
       end
       (0..1/step_s-1).each do |i|

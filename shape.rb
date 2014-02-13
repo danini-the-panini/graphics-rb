@@ -11,9 +11,9 @@ module Shape
 
   def shapes; @@shapes; end
 
-  def draw_shape sym
+  def draw_shape sym, type=GL_TRIANGLES
     shape = shapes[sym]
-    shape.draw unless shape.nil?
+    shape.draw type unless shape.nil?
   end
 
   class Shape
@@ -55,14 +55,14 @@ module Shape
       @matrix = Matrices.scale @matrix, @scale
     end
 
-    def draw
+    def draw type=GL_TRIANGLES
       return if mesh.nil?
 
       current_shader.update_mat4 :world, @matrix
       current_shader.update_vec3 :in_colour, @colour
       current_shader.update_float :opacity, @opacity
 
-      mesh.draw
+      mesh.draw type
     end
   end
 

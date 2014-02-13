@@ -12,8 +12,15 @@ window do
     glEnable GL_DEPTH_TEST
 
     shader :simple do
-      vertex 'vertex.glsl'
-      fragment 'fragment.glsl'
+      vertex 'passthrough.vsh'
+      geometry 'simple.gsh'
+      fragment 'pplighting.fsh'
+    end
+
+    shader :normals do
+      vertex 'passthrough.vsh'
+      geometry 'normals.gsh'
+      fragment 'flat.fsh'
     end
 
     camera :main do
@@ -26,6 +33,10 @@ window do
       fovy 45
       z_near 0.5
       z_far 100
+    end
+
+    light :lamp do
+      point 1, 2, 1
     end
 
     add_control CameraControl.new :main
@@ -63,6 +74,7 @@ window do
     end
 
     spline :c do
+      control_point  2, 1, 0
       control_point  2,-1, 0
       control_point  1, 0, 0
       control_point  2, 1, 0
@@ -70,10 +82,11 @@ window do
       control_point  2,-1, 0
       control_point  1, 0, 0
       control_point  2, 1, 0
+      control_point  2,-1, 0
     end
 
     mesh :spline do
-      lathe :c, {step_s: 0.01, step_t: 0.01}
+      lathe :a, {step_s: 0.01, step_t: 0.01}
       # sweep :a, :b, {step_s: 0.01, step_t: 0.01}
     end
 
@@ -118,21 +131,24 @@ window do
       bg 0, 1, 1
       use_camera :main
       use_lense :main
+      use_light :lamp
 
-      before_each_frame do
-        use_shader :simple
-      end
+      with_shader :simple do
 
-      each_frame do
+        # draw_shape :monkey
+        # monkey_shape.rotation += Vector[0,1,0]
 
-        draw_shape :monkey
-        monkey_shape.rotation += Vector[0,1,0]
-
-        # spline_shape.draw
+        spline_shape.draw
 
         cp_shapes.each { |s| s.draw }
 
         floor.draw
+      end
+
+      with_shader :normals do
+        current_shader.update_float :normal_length, 0.1
+
+        spline_shape.draw GL_POINTS
       end
     end
   end
