@@ -44,7 +44,6 @@ module Spline
     def size; @p.size; end
     def each_control_point
       (0...size).each { |i| yield @p[i], @normals[i] }
-      @p.each { |x| yield x }
     end
 
     def point(t)

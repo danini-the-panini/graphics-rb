@@ -32,20 +32,37 @@ module Mesh
   end
 
   class Mesh
-    def initialize points, normals, faces
+    def initialize points, normals, faces, calculate_normals
       ptr = ' '*8
       glGenVertexArrays 1, ptr
       @handle = ptr.unpack('L')[0]
 
       @points = points
-      @normals = normals
       @faces = faces
+
+      unless calculate_normals
+        @normals = normals
+      else
+        adjacent = []
+        @points.each_index do |i|
+          adjacent[i] ||= []
+        end
+        (0...@faces.size).step(3) do |i|
+          these = @faces[i...i+3]
+          v = these.collect { |j| @points[j] }
+          n = (v[0]-v[1]).cross(v[0]-v[2]).normalize
+          these.each do |f|
+            adjacent[f] << n
+          end
+        end
+        @normals = adjacent.collect { |n| n.empty? ? Vector[0,1,0] : n.inject(:+) }
+      end
 
       @vertices = []
 
-      (0...points.size).each do |i|
-        @vertices << points[i].x << points[i].y << points[i].z
-        @vertices << normals[i].x << normals[i].y << normals[i].z
+      (0...@points.size).each do |i|
+        @vertices << @points[i].x << @points[i].y << @points[i].z
+        @vertices << @normals[i].x << @normals[i].y << @normals[i].z
       end
 
       bind
@@ -62,12 +79,15 @@ module Mesh
       glBufferData(GL_ELEMENT_ARRAY_BUFFER, @faces.size * SIZEOF_INT,
               i_arr(@faces), GL_STATIC_DRAW)
 
-      glEnableVertexAttribArray(Shader::POSITION_LOC)
-      glVertexAttribPointer(Shader::POSITION_LOC, POINT_SIZE, GL_FLOAT, GL_FALSE,
+      position_loc = current_shader.find_attribute :position
+
+      glEnableVertexAttribArray position_loc
+      glVertexAttribPointer(position_loc, POINT_SIZE, GL_FLOAT, GL_FALSE,
               VERTEX_SIZE * SIZEOF_FLOAT, 0)
 
-      glEnableVertexAttribArray(Shader::NORMAL_LOC)
-      glVertexAttribPointer(Shader::NORMAL_LOC, NORMAL_SIZE, GL_FLOAT, GL_FALSE,
+      normal_loc = current_shader.find_attribute :normal
+      glEnableVertexAttribArray normal_loc
+      glVertexAttribPointer(normal_loc, NORMAL_SIZE, GL_FLOAT, GL_FALSE,
               VERTEX_SIZE * SIZEOF_FLOAT, POINT_SIZE * SIZEOF_FLOAT)
     end
 
@@ -93,6 +113,7 @@ module Mesh
     def point(x,y,z); pointv Vector[x,y,z]; self; end
     def normalv(v); @normals << v; self; end
     def normal(x,y,z); normalv Vector[x,y,z]; self; end
+    def calculate_normals(v=true); @calculate_normals = v; self; end
     def face(a,b,c); @faces << a << b << c; self; end
 
     def cube o={}
@@ -177,7 +198,7 @@ module Mesh
       (0..1).step(step_s) do |i|
         (0..1).step(step_t) do |j|
           pointv spl_s.point(i) + spl_t.point(j)
-          normal 0, 1, 0 # todo: work out normal
+          normal 0, 1, 0
         end
       end
       (0..1/step_s-1).each do |i|
@@ -206,8 +227,8 @@ module Mesh
       (0..1).step(step_s) do |i|
         (0..1).step(step_t) do |j|
           rot = Matrices.rotate(Matrix.I(4), j*angle, axis)
-          pointv rot * spl.point(i).to_pnt
-          normalv rot * spl.normal(i).to_dir
+          pointv Vector.elements (rot * spl.point(i).to_pnt)[0...3]
+          normal 0, 1, 0
         end
       end
       (0..1/step_s-1).each do |i|
@@ -267,7 +288,7 @@ module Mesh
     end
 
     def build
-      Mesh.new @points, @normals, @faces
+      Mesh.new @points, @normals, @faces, !!@calculate_normals
     end
   end
 

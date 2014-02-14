@@ -1,7 +1,7 @@
-#version 420
+#version 330
 
-layout (location=1) in vec3 position;
-layout (location=2) in vec3 normal;
+in vec3 position;
+in vec3 normal;
 
 uniform mat4 projection;
 uniform mat4 world;
@@ -15,9 +15,8 @@ void main()
 {
     eye = (inverse(view) * vec4 (0, 0, 1, 1)).xyz;
 
-    g_normal = (world * vec4(normal, 0.0f)).xyz;
+    g_normal = (world * vec4(normal, 0)).xyz;
 
-    g_position = (world * vec4(position,1.0f)).xyz;
-    gl_Position = projection * view * world * vec4(position, 1.0f);
+    g_position = (world * vec4(position,1)).xyz;
+    gl_Position = projection * view * world * vec4(position, 1);
 }
-
