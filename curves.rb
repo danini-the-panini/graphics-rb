@@ -133,28 +133,40 @@ window do
       end
     end
 
-    viewport :main do
+    viewport do
       bg 0, 1, 1
-      use_camera :main
-      use_lense :main
-      use_light :lamp
 
-      with_shader :simple do
+      should_draw_normals = false
 
-        # draw_shape :monkey
-        # monkey_shape.rotation += Vector[0,1,0]
+      each_frame do |aspect|
+        should_draw_normals = !should_draw_normals if get_key(GLFW_KEY_N) == GLFW_PRESS
+        monkey_shape.rotation += Vector[0,1,0]
 
-        spline_shape.draw
+        with_shader :simple do
+          use_camera :main
+          use_lense :main, aspect
+          use_light :lamp
 
-        cp_shapes.each { |s| s.draw }
+          # draw_shape :monkey
 
-        floor.draw
-      end
+          spline_shape.draw
 
-      with_shader :normals do
-        current_shader.update_float :normal_length, 0.1
+          cp_shapes.each { |s| s.draw }
 
-        spline_shape.draw GL_POINTS
+          floor.draw
+        end
+
+        if should_draw_normals
+          with_shader :normals do
+            use_camera :main
+            use_lense :main, aspect
+            use_light :lamp
+
+            current_shader.update_float :normal_length, 0.1
+
+            spline_shape.draw GL_POINTS
+          end
+        end
       end
     end
   end

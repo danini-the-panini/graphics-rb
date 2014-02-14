@@ -63,12 +63,6 @@ end
     end
   end
 
-  def gl_begin mode
-    glBegin mode
-    yield
-    glEnd
-  end
-
   def add_control control
     glfwSetKeyCallback(         @@handle, control.key_fun          ) unless control.key_fun.nil?
     glfwSetCharCallback(        @@handle, control.char_fun         ) unless control.char_fun.nil?
@@ -78,20 +72,41 @@ end
     glfwSetScrollCallback(      @@handle, control.scroll_fun       ) unless control.scroll_fun.nil?
   end
 
+  def get_key key
+    glfwGetKey @@handle, key
+  end
+
+  def with_shader shader
+    use_shader shader
+    yield
+  end
+
+  def use_camera camera
+    current_shader.update_mat4(:view, cameras[camera].view) unless cameras[camera].nil?
+  end
+
+  def use_lense lense, aspect
+    current_shader.update_mat4(:projection, lenses[lense].projection(aspect)) unless lenses[lense].nil?
+  end
+
+  def use_light light
+    current_shader.update_vec3(:light, lights[light].point) unless lights[light].nil?
+  end
+
   class Window
 
-    def initialize title, width, height, exit_on_close, wireframe
+    def initialize title, width, height, exit_on_close, wireframe, viewports
       @handle = glfwCreateWindow( width, height, title, nil, nil )
       @@handle = @handle
 
       glfwMakeContextCurrent @handle
+      glfwSwapInterval 1
       glfwSetKeyCallback @handle, @@esc_to_exit_callback if exit_on_close
 
       glEnable GL_SCISSOR_TEST
       glPolygonMode GL_FRONT_AND_BACK, if wireframe then GL_LINE else GL_FILL end
 
       yield
-
 
       while glfwWindowShouldClose(@handle) == 0
 
@@ -101,24 +116,10 @@ end
         @width = width_ptr.unpack('L')[0]
         @height = height_ptr.unpack('L')[0]
 
-        viewports.each do |tag, vp|
-          x, y, w, h = (@width*vp.left).to_i, (@height*(1.0-vp.top-vp.height)).to_i, (@width*vp.width).to_i, (@height*vp.height).to_i
-          glViewport x, y, w, h
-          glScissor x, y, w, h
-          glClearColor *vp.bg
-          glClear GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
+        viewports.each do |vp|
+          aspect = vp.use @width, @height
 
-          aspect = w.to_f / h.to_f
-
-          vp.shader_blocks.each do |shader, block|
-            use_shader shader
-
-            current_shader.update_mat4(:view, cameras[vp.camera].view) unless cameras[vp.camera].nil?
-            current_shader.update_mat4(:projection, lenses[vp.lense].projection(aspect)) unless lenses[vp.lense].nil?
-            current_shader.update_vec3(:light, lights[vp.light].point) unless lights[vp.light].nil?
-
-            block.yield
-          end
+          vp.block.yield aspect
         end
 
         glfwSwapBuffers @handle
@@ -137,6 +138,8 @@ end
       @title = 'OpenGL App'
       @width = 800; @height = 600
       @init_block
+
+      @viewports = []
     end
     def title(v); @title = v; end
     def width(v); @width = v; end
@@ -144,8 +147,14 @@ end
     def init(&v); @init_block = v; end
     def exit_on_close(v=true); @exit_on_close = v; end
     def wireframe(v=true); @wireframe = v; end
+
+    def viewport &block
+      @viewports << Docile.dsl_eval(ViewportBuilder.new, &block).build
+      self
+    end
+
     def build
-      Window.new @title, @width, @height, !!@exit_on_close, !!@wireframe, &@init_block
+      Window.new @title, @width, @height, !!@exit_on_close, !!@wireframe, @viewports, &@init_block
     end
   end
 
