@@ -32,20 +32,37 @@ module Mesh
   end
 
   class Mesh
-    def initialize points, normals, faces
+    def initialize points, normals, faces, calculate_normals
       ptr = ' '*8
       glGenVertexArrays 1, ptr
       @handle = ptr.unpack('L')[0]
 
       @points = points
-      @normals = normals
       @faces = faces
+
+      unless calculate_normals
+        @normals = normals
+      else
+        adjacent = []
+        @points.each_index do |i|
+          adjacent[i] ||= []
+        end
+        (0...@faces.size).step(3) do |i|
+          these = @faces[i...i+3]
+          v = these.collect { |j| @points[j] }
+          n = (v[0]-v[1]).cross(v[0]-v[2]).normalize
+          these.each do |f|
+            adjacent[f] << n
+          end
+        end
+        @normals = adjacent.collect { |n| n.empty? ? Vector[0,1,0] : n.inject(:+) }
+      end
 
       @vertices = []
 
-      (0...points.size).each do |i|
-        @vertices << points[i].x << points[i].y << points[i].z
-        @vertices << normals[i].x << normals[i].y << normals[i].z
+      (0...@points.size).each do |i|
+        @vertices << @points[i].x << @points[i].y << @points[i].z
+        @vertices << @normals[i].x << @normals[i].y << @normals[i].z
       end
 
       bind
@@ -62,12 +79,15 @@ module Mesh
       glBufferData(GL_ELEMENT_ARRAY_BUFFER, @faces.size * SIZEOF_INT,
               i_arr(@faces), GL_STATIC_DRAW)
 
-      glEnableVertexAttribArray(Shader::POSITION_LOC)
-      glVertexAttribPointer(Shader::POSITION_LOC, POINT_SIZE, GL_FLOAT, GL_FALSE,
+      position_loc = current_shader.find_attribute :position
+
+      glEnableVertexAttribArray position_loc
+      glVertexAttribPointer(position_loc, POINT_SIZE, GL_FLOAT, GL_FALSE,
               VERTEX_SIZE * SIZEOF_FLOAT, 0)
 
-      glEnableVertexAttribArray(Shader::NORMAL_LOC)
-      glVertexAttribPointer(Shader::NORMAL_LOC, NORMAL_SIZE, GL_FLOAT, GL_FALSE,
+      normal_loc = current_shader.find_attribute :normal
+      glEnableVertexAttribArray normal_loc
+      glVertexAttribPointer(normal_loc, NORMAL_SIZE, GL_FLOAT, GL_FALSE,
               VERTEX_SIZE * SIZEOF_FLOAT, POINT_SIZE * SIZEOF_FLOAT)
     end
 
@@ -93,12 +113,15 @@ module Mesh
     def point(x,y,z); pointv Vector[x,y,z]; self; end
     def normalv(v); @normals << v; self; end
     def normal(x,y,z); normalv Vector[x,y,z]; self; end
+    def calculate_normals(v=true); @calculate_normals = v; self; end
     def face(a,b,c); @faces << a << b << c; self; end
 
     def cube o={}
       w = (o[:width] || 1)*0.5
       h = (o[:height] || 1)*0.5
       d = (o[:depth] || 1)*0.5
+
+      n = @points.size
 
       point -w, -h, -d
       point -w, -h,  d
@@ -119,43 +142,45 @@ module Mesh
       normal 0, 1, 0
 
       # top
-      face 0, 1, 2
-      face 0, 2, 3
+      face n+0, n+1, n+2
+      face n+0, n+2, n+3
 
       # bottom
-      face 5, 4, 6
-      face 6, 4, 7
+      face n+5, n+4, n+6
+      face n+6, n+4, n+7
 
       # right
-      face 6, 7, 2
-      face 2, 7, 3
+      face n+6, n+7, n+2
+      face n+2, n+7, n+3
 
       # left
-      face 4, 5, 1
-      face 4, 1, 0
+      face n+4, n+5, n+1
+      face n+4, n+1, n+0
 
       # front
-      face 1, 5, 6
-      face 1, 6, 2
+      face n+1, n+5, n+6
+      face n+1, n+6, n+2
 
       # back
-      face 4, 0, 7
-      face 7, 0, 3
+      face n+4, n+0, n+7
+      face n+7, n+0, n+3
     end
 
     def quad o={}
       w = (o[:width] || 1)*0.5
       l = (o[:length] || 1)*0.5
 
+      n = @points.size
+
       point -w, 0, -l
       point -w, 0,  l
       point  w, 0,  l
       point  w, 0, -l
 
-      normal 0, 1, 0
-      normal 0, 1, 0
-      normal 0, 1, 0
-      normal 0, 1, 0
+      normal n+0, n+1, n+0
+      normal n+0, n+1, n+0
+      normal n+0, n+1, n+0
+      normal n+0, n+1, n+0
 
       face 1, 0, 2
       face 2, 0, 3
@@ -168,10 +193,12 @@ module Mesh
       spl_s = splines[s]
       spl_t = splines[t]
 
+      n = @points.size
+
       (0..1).step(step_s) do |i|
         (0..1).step(step_t) do |j|
-          pointv spl_s.p(i) + spl_t.p(j)
-          normal 0, 1, 0 # todo: work out normal
+          pointv spl_s.point(i) + spl_t.point(j)
+          normal 0, 1, 0
         end
       end
       (0..1/step_s-1).each do |i|
@@ -180,8 +207,8 @@ module Mesh
           b = a + 1
           c = a + 1/step_t
           d = c + 1
-          face a, b, d
-          face a, d, c
+          face n+a, n+b, n+d
+          face n+a, n+d, n+c
         end
       end
       self
@@ -195,12 +222,13 @@ module Mesh
 
       spl = splines[s]
 
+      n = @points.size
+
       (0..1).step(step_s) do |i|
         (0..1).step(step_t) do |j|
-          p = Matrices.rotate(Matrix.I(4), j*angle, axis) * spl.p(i).to_pnt
-          if p.x+p.y+p.z == 0 then puts "origin at #{i},#{j}" end
-          point p.x, p.y, p.z
-          normal 0, 1, 0 # todo: work out normal
+          rot = Matrices.rotate(Matrix.I(4), j*angle, axis)
+          pointv Vector.elements (rot * spl.point(i).to_pnt)[0...3]
+          normal 0, 1, 0
         end
       end
       (0..1/step_s-1).each do |i|
@@ -209,15 +237,58 @@ module Mesh
           b = a + 1
           c = a + 1/step_t
           d = c + 1
-          face a, b, d
-          face a, d, c
+          face n+a, n+b, n+d
+          face n+a, n+d, n+c
         end
       end
       self
     end
 
+    def wavefront file
+      n = @points.size
+      np = 0
+
+      norms = []
+      vinds = []
+      ninds = []
+      narray = []
+
+      File.open(file).each do |line|
+        if line.start_with? 'v '
+          np += 1
+          pointv Vector.elements( line.split[ 1..-1].collect { |v| v.to_f } )
+        elsif line.start_with? 'vn '
+          norms << Vector.elements( line.split[1..-1].collect { |v| v.to_f } )
+        elsif line.start_with? 'f '
+          list = line[1..-1].split.collect! { |x| x.split('/') }
+
+          vinds << list.collect { |x| x[0].to_i-1 }
+          ninds << list.collect { |x| x[1].to_i-1 }
+        end
+      end
+
+      visited = [false]*np
+
+      (0...vinds.size).each do |i|
+        ni = ninds[i]
+        vinds[i].each_with_index do |vi, j|
+          unless visited[vi]
+            visited[vi] = true
+
+            narray[vi] = norms[ni[j]]
+          end
+        end
+      end
+
+      narray.each { |x| normalv x }
+
+      vinds.each do |v|
+        face v[1]+n, v[0]+n, v[2]+n
+      end
+    end
+
     def build
-      Mesh.new @points, @normals, @faces
+      Mesh.new @points, @normals, @faces, !!@calculate_normals
     end
   end
 

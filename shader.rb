@@ -11,8 +11,6 @@ include GLFW
 include FFIUtils
 
 module Shader
-  POSITION_LOC = 1
-  NORMAL_LOC = 2
 
   @@shaders = {}
   @@current_shader = nil
@@ -125,6 +123,10 @@ module Shader
     end
     def update_int name, value
       glUniform1i find_uniform(name), value.to_i
+    end
+
+    def find_attribute name
+      glGetAttribLocation @handle, name.to_s
     end
 
   end

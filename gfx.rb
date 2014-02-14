@@ -17,6 +17,7 @@ require_relative './mesh.rb'
 require_relative './camera_control.rb'
 require_relative './spline.rb'
 require_relative './shape.rb'
+require_relative './light.rb'
 
 OpenGL.load_dll
 GLFW.load_dll
@@ -34,11 +35,21 @@ module Graphics
   include Mesh
   include Spline
   include Shape
+  include Light
 
   glfwInit
 
+def core v
+  v_split = v.split '.'
+  glfwWindowHint GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE
+  glfwWindowHint GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE
+  glfwWindowHint GLFW_CONTEXT_VERSION_MAJOR, v_split[0].to_i
+  glfwWindowHint GLFW_CONTEXT_VERSION_MINOR, v_split[1].to_i
+  glfwWindowHint GLFW_CONTEXT_REVISION, v_split[2].to_i
+end
+
   @@error_callback = GLFW::create_callback :GLFWerrorfun do |error, description|
-    puts "ERROR #{error}: #{decription}"
+    puts "ERROR #{error}: #{description}"
   end
 
   glfwSetErrorCallback @@error_callback
@@ -99,14 +110,15 @@ module Graphics
 
           aspect = w.to_f / h.to_f
 
-          vp.block_before.yield
+          vp.shader_blocks.each do |shader, block|
+            use_shader shader
 
-          unless current_shader.nil?
             current_shader.update_mat4(:view, cameras[vp.camera].view) unless cameras[vp.camera].nil?
             current_shader.update_mat4(:projection, lenses[vp.lense].projection(aspect)) unless lenses[vp.lense].nil?
-          end
+            current_shader.update_vec3(:light, lights[vp.light].point) unless lights[vp.light].nil?
 
-          vp.block.yield
+            block.yield
+          end
         end
 
         glfwSwapBuffers @handle

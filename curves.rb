@@ -4,6 +4,7 @@ include Graphics
 
 window do
   title 'Curves'
+  core '3.3.0'
   exit_on_close
   # wireframe
 
@@ -12,9 +13,18 @@ window do
     glEnable GL_DEPTH_TEST
 
     shader :simple do
-      vertex 'vertex.glsl'
-      fragment 'fragment.glsl'
+      vertex 'passthrough.vsh'
+      geometry 'simple.gsh'
+      fragment 'pplighting.fsh'
     end
+
+    shader :normals do
+      vertex 'passthrough.vsh'
+      geometry 'normals.gsh'
+      fragment 'flat.fsh'
+    end
+
+    use_shader :simple
 
     camera :main do
       eye 5, 3, 5
@@ -28,14 +38,22 @@ window do
       z_far 100
     end
 
+    light :lamp do
+      point 1, 2, 1
+    end
+
     add_control CameraControl.new :main
 
     mesh :cube do
-      cube
+      wavefront 'cube.obj'
     end
 
     mesh :quad do
       quad
+    end
+
+    mesh :monkey do
+      wavefront 'monkey.obj'
     end
 
     spline :a do
@@ -58,13 +76,35 @@ window do
       control_point  1, 0, 0
     end
 
+    spline :c do
+      control_point  2, 1, 0
+      control_point  2,-1, 0
+      control_point  1, 0, 0
+      control_point  2, 1, 0
+      control_point  3, 0, 0
+      control_point  2,-1, 0
+      control_point  1, 0, 0
+      control_point  2, 1, 0
+      control_point  2,-1, 0
+    end
+
+    chosen_spline = :a
+
     mesh :spline do
-      lathe :a, {step_s: 0.01, step_t: 0.01}
+      lathe chosen_spline, {step_s: 0.01, step_t: 0.01}
       # sweep :a, :b, {step_s: 0.01, step_t: 0.01}
+      calculate_normals
     end
 
     cube_shape = shape :cube do
       use_mesh :cube
+      colour 1, 0, 0
+      position 0, 1, 0
+      uniform_scale 2
+    end
+
+    monkey_shape = shape :monkey do
+      use_mesh :monkey
       colour 1, 0, 0
       position 0, 1, 0
       uniform_scale 2
@@ -84,7 +124,7 @@ window do
 
     cp_shapes = []
 
-    splines[:a].each_control_point do |p|
+    splines[chosen_spline].each_control_point do |p|
       cp_shapes << shape do
         use_mesh :cube
         colour 1, 0, 1
@@ -97,21 +137,24 @@ window do
       bg 0, 1, 1
       use_camera :main
       use_lense :main
+      use_light :lamp
 
-      before_each_frame do
-        use_shader :simple
-      end
+      with_shader :simple do
 
-      each_frame do
-
-        # draw_shape :cube
-        # cube_shape.rotation += Vector[0,1,0]
+        # draw_shape :monkey
+        # monkey_shape.rotation += Vector[0,1,0]
 
         spline_shape.draw
 
         cp_shapes.each { |s| s.draw }
 
         floor.draw
+      end
+
+      with_shader :normals do
+        current_shader.update_float :normal_length, 0.1
+
+        spline_shape.draw GL_POINTS
       end
     end
   end
