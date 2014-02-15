@@ -136,10 +136,7 @@ window do
     viewport do
       bg 0, 1, 1
 
-      should_draw_normals = false
-
       each_frame do |aspect|
-        should_draw_normals = !should_draw_normals if get_key(GLFW_KEY_N) == GLFW_PRESS
         monkey_shape.rotation += Vector[0,1,0]
 
         with_shader :simple do
@@ -156,7 +153,7 @@ window do
           floor.draw
         end
 
-        if should_draw_normals
+        if get_key(GLFW_KEY_N) == GLFW_PRESS
           with_shader :normals do
             use_camera :main
             use_lense :main, aspect
