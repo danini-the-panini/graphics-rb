@@ -55,7 +55,7 @@ module Mesh
             adjacent[f] << n
           end
         end
-        @normals = adjacent.collect { |n| n.empty? ? Vector[0,1,0] : n.inject(:+) }
+        @normals = adjacent.collect { |n| n.empty? ? Vector[0,1,0] : n.inject(:+).normalize }
       end
 
       @vertices = []
