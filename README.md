@@ -18,5 +18,5 @@ Interaction
 Left-click and drag rotates the camera,
 Right-click and drag pans,
 Scroll zooms,
-Hold N to show normals,
+Hold N to show normals and control points,
 ESC quits.

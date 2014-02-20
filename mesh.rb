@@ -186,34 +186,9 @@ module Mesh
       face 2, 0, 3
     end
 
-    def sweep s, t, o={}
-      step_s = o[:step_s] || 0.1
-      step_t = o[:step_t] || 0.1
-
-      spl_s = splines[s]
-      spl_t = splines[t]
-
-      n = @points.size
-
-      (0..1).step(step_s) do |i|
-        (0..1).step(step_t) do |j|
-          pointv spl_s.point(i) + spl_t.point(j)
-          normal 0, 1, 0
-        end
-      end
-      (0..1/step_s-1).each do |i|
-        (0..1/step_t-1).each do |j|
-          a = 1/step_t*i + j
-          b = a + 1
-          c = a + 1/step_t
-          d = c + 1
-          face n+a, n+b, n+d
-          face n+a, n+d, n+c
-        end
-      end
-      self
-    end
-
+    # Generation of geometry in lathe function.
+    # The rotation matrix is used to rotate the spline around the origin given the specified angle.
+    # The faces are then generated as if the points were on a grid.
     def lathe s, o={}
       step_s = o[:step_s] || 0.1
       step_t = o[:step_t] || 0.1
@@ -224,13 +199,14 @@ module Mesh
 
       n = @points.size
 
+      # generate vertices
       (0..1).step(step_s) do |i|
         (0..1).step(step_t) do |j|
           rot = Matrices.rotate(Matrix.I(4), j*angle, axis)
-          pointv Vector.elements (rot * spl.point(i).to_pnt)[0...3]
-          normal 0, 1, 0
+          pointv Vector.elements (rot * spl.p(i).to_pnt)[0...3]
         end
       end
+      # generate faces
       (0..1/step_s-1).each do |i|
         (0..1/step_t-1).each do |j|
           a = 1/step_t*i + j
@@ -241,50 +217,8 @@ module Mesh
           face n+a, n+d, n+c
         end
       end
+      calculate_normals
       self
-    end
-
-    def wavefront file
-      n = @points.size
-      np = 0
-
-      norms = []
-      vinds = []
-      ninds = []
-      narray = []
-
-      File.open(file).each do |line|
-        if line.start_with? 'v '
-          np += 1
-          pointv Vector.elements( line.split[ 1..-1].collect { |v| v.to_f } )
-        elsif line.start_with? 'vn '
-          norms << Vector.elements( line.split[1..-1].collect { |v| v.to_f } )
-        elsif line.start_with? 'f '
-          list = line[1..-1].split.collect! { |x| x.split('/') }
-
-          vinds << list.collect { |x| x[0].to_i-1 }
-          ninds << list.collect { |x| x[1].to_i-1 }
-        end
-      end
-
-      visited = [false]*np
-
-      (0...vinds.size).each do |i|
-        ni = ninds[i]
-        vinds[i].each_with_index do |vi, j|
-          unless visited[vi]
-            visited[vi] = true
-
-            narray[vi] = norms[ni[j]]
-          end
-        end
-      end
-
-      narray.each { |x| normalv x }
-
-      vinds.each do |v|
-        face v[1]+n, v[0]+n, v[2]+n
-      end
     end
 
     def build

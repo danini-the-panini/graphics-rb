@@ -45,69 +45,27 @@ window do
     add_control CameraControl.new :main
 
     mesh :cube do
-      wavefront 'cube.obj'
+      cube
     end
 
     mesh :quad do
       quad
     end
 
-    mesh :monkey do
-      wavefront 'monkey.obj'
+    spline :spline do
+      control_point -0.5, -3.5,  0,  2
+      control_point  3.5,  1.5,  0
+      control_point  0.5,  4.5,  0
+      control_point    6,    6,  0,  2
+      control_point    1,    4,  0
+      control_point    4,    1,  0
+      control_point    0,   -4,  0,  2
+      control_point    6,   -6,  0,  2
+      control_point    0,   -6,  0,  2
     end
-
-    spline :a do
-      control_point -0.5,-3.5, 0, 2
-      control_point 3.5, 1.5, 0
-      control_point 0.5, 4.5, 0
-      control_point 6, 6, 0, 2
-      control_point 1, 4, 0
-      control_point 4, 1, 0
-      control_point 0,-4, 0, 2
-      control_point 6,-6, 0, 2
-      control_point 0,-6, 0, 2
-    end
-
-    spline :b do
-      control_point  1, 0, 0
-      control_point  0, 0, 1
-      control_point -1, 0, 0
-      control_point  0, 0,-1
-      control_point  1, 0, 0
-    end
-
-    spline :c do
-      control_point  2, 1, 0
-      control_point  2,-1, 0
-      control_point  1, 0, 0
-      control_point  2, 1, 0
-      control_point  3, 0, 0
-      control_point  2,-1, 0
-      control_point  1, 0, 0
-      control_point  2, 1, 0
-      control_point  2,-1, 0
-    end
-
-    chosen_spline = :a
 
     mesh :spline do
-      lathe chosen_spline, {step_s: 0.01, step_t: 0.01}
-      # sweep :a, :b, {step_s: 0.01, step_t: 0.01}
-      calculate_normals
-    end
-
-    cube_shape = shape :cube do
-      use_mesh :cube
-      colour 1, 0, 0
-      position 0, 1, 0
-      uniform_scale 2
-    end
-
-    monkey_shape = shape :monkey do
-      use_mesh :monkey
-      colour 1, 0, 0
-      position 0, 1, 0
-      uniform_scale 2
+      lathe :spline, {step_s: 0.01, step_t: 0.01}
     end
 
     floor = shape do
@@ -124,7 +82,7 @@ window do
 
     cp_shapes = []
 
-    splines[chosen_spline].each_control_point do |p|
+    splines[:spline].each_control_point do |p|
       cp_shapes << shape do
         use_mesh :cube
         colour 1, 0, 1
@@ -137,23 +95,22 @@ window do
       bg 0, 1, 1
 
       each_frame do |aspect|
-        monkey_shape.rotation += Vector[0,1,0]
+
+        n_pressed = (get_key(GLFW_KEY_N) == GLFW_PRESS)
 
         with_shader :simple do
           use_camera :main
           use_lense :main, aspect
           use_light :lamp
 
-          # draw_shape :monkey
-
           spline_shape.draw
 
-          cp_shapes.each { |s| s.draw }
+          cp_shapes.each { |s| s.draw } if n_pressed
 
           floor.draw
         end
 
-        if get_key(GLFW_KEY_N) == GLFW_PRESS
+        if n_pressed
           with_shader :normals do
             use_camera :main
             use_lense :main, aspect
