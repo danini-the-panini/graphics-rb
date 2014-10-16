@@ -46,9 +46,9 @@ module Camera
 
     private
     def recalc
-      @d = @at - @eye
-      @right = @up.cross @d
-      @real_up = @d.cross @right
+      @d = (@at - @eye).normalize
+      @right = @up.cross(@d).normalize
+      @real_up = @d.cross(@right).normalize
     end
 
   end
