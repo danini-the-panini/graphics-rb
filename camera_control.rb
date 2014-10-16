@@ -21,10 +21,10 @@ class CameraControl < Control
     @camera_move_on_mouse = GLFW::create_callback :GLFWcursorposfun do |window, x, y|
       dx = x-mx; dy = y-my;
       if glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS
-        m = Matrices.rotate Matrix.I(4), dy, cam.right.normalize
+        m = Matrices.rotate Matrix.I(4), -dy, cam.right.normalize
         m = Matrices.rotate m, dx, Vector[0,1,0]
         d2 = m * Vector.elements( cam.d.to_a + [0] )
-        cam.eye = cameras[sym].at - Vector[d2.x,d2.y,d2.z]
+        cam.at = cam.eye + Vector[d2.x,d2.y,d2.z]
       elsif glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS
         v = cam.right.normalize * dx * 0.05 + cam.real_up.normalize * dy * 0.05
         cam.eye += v

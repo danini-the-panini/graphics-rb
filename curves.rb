@@ -2,6 +2,8 @@ require_relative './gfx.rb'
 
 include Graphics
 
+CAMERA_SPEED =0.5
+
 window do
   title 'Curves'
   core '3.3.0'
@@ -26,7 +28,7 @@ window do
 
     use_shader :simple
 
-    camera :main do
+    cam = camera :main do
       eye 5, 3, 5
       at 0, 0, 0
       up 0, 1, 0
@@ -35,7 +37,7 @@ window do
     perspective :main do
       fovy 45
       z_near 0.5
-      z_far 100
+      z_far 1000
     end
 
     light :lamp do
@@ -65,14 +67,14 @@ window do
     end
 
     mesh :spline do
-      lathe :spline, {step_s: 0.01, step_t: 0.01}
+      lathe :spline, {step_s: 0.02, step_t: 0.02}
     end
 
     floor = shape do
       use_mesh :quad
       colour 0, 1, 0
       position 0, -6, 0
-      uniform_scale 20
+      uniform_scale 200
     end
 
     spline_shape = shape do
@@ -96,6 +98,34 @@ window do
 
       each_frame do |aspect|
 
+        d = cam.d * CAMERA_SPEED
+        d2 = cam.right * CAMERA_SPEED
+        d3 = cam.up * CAMERA_SPEED
+        if get_key(GLFW_KEY_W) == GLFW_PRESS
+          cam.eye += d
+          cam.at += d
+        end
+        if get_key(GLFW_KEY_S) == GLFW_PRESS
+          cam.eye -= d
+          cam.at -= d
+        end
+        if get_key(GLFW_KEY_A) == GLFW_PRESS
+          cam.eye += d2
+          cam.at += d2
+        end
+        if get_key(GLFW_KEY_D) == GLFW_PRESS
+          cam.eye -= d2
+          cam.at -= d2
+        end
+        if get_key(GLFW_KEY_SPACE) == GLFW_PRESS
+          cam.eye += d3
+          cam.at += d3
+        end
+        if get_key(GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS
+          cam.eye -= d3
+          cam.at -= d3
+        end
+
         n_pressed = (get_key(GLFW_KEY_N) == GLFW_PRESS)
 
         with_shader :simple do
@@ -103,7 +133,12 @@ window do
           use_lense :main, aspect
           use_light :lamp
 
-          spline_shape.draw
+          10.times do |j|
+            10.times do |i|
+              spline_shape.position = Vector[i*20,j*10,j*20]
+              spline_shape.draw
+            end
+          end
 
           cp_shapes.each { |s| s.draw } if n_pressed
 
