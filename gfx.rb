@@ -1,3 +1,4 @@
+require 'pry'
 
 require 'opengl'
 require 'glfw'
@@ -19,8 +20,9 @@ require_relative './spline.rb'
 require_relative './shape.rb'
 require_relative './light.rb'
 
-OpenGL.load_dll
-GLFW.load_dll
+OpenGL.load_lib
+path = `pkg-config glfw3 --libs-only-L`.chomp.strip[2..-1]
+GLFW.load_lib('libglfw3.dylib', path)
 
 include OpenGL
 include GLFW
@@ -39,14 +41,14 @@ module Graphics
 
   glfwInit
 
-def core v
-  v_split = v.split '.'
-  glfwWindowHint GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE
-  glfwWindowHint GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE
-  glfwWindowHint GLFW_CONTEXT_VERSION_MAJOR, v_split[0].to_i
-  glfwWindowHint GLFW_CONTEXT_VERSION_MINOR, v_split[1].to_i
-  glfwWindowHint GLFW_CONTEXT_REVISION, v_split[2].to_i
-end
+  def core v
+    v_split = v.split '.'
+    glfwWindowHint GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE
+    glfwWindowHint GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE
+    glfwWindowHint GLFW_CONTEXT_VERSION_MAJOR, v_split[0].to_i
+    glfwWindowHint GLFW_CONTEXT_VERSION_MINOR, v_split[1].to_i
+    # glfwWindowHint GLFW_CONTEXT_REVISION, v_split[2].to_i
+  end
 
   @@error_callback = GLFW::create_callback :GLFWerrorfun do |error, description|
     puts "ERROR #{error}: #{description}"
@@ -64,6 +66,7 @@ end
   end
 
   def add_control control
+    @__control = control
     glfwSetKeyCallback(         @@handle, control.key_fun          ) unless control.key_fun.nil?
     glfwSetCharCallback(        @@handle, control.char_fun         ) unless control.char_fun.nil?
     glfwSetMouseButtonCallback( @@handle, control.mouse_button_fun ) unless control.mouse_button_fun.nil?

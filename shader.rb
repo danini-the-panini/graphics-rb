@@ -1,6 +1,7 @@
 require 'docile'
 
 require 'opengl'
+# require 'mittsu/renderers/opengl/opengl_debug'
 require 'glfw'
 
 require_relative './ffi_utils.rb'
