@@ -20,9 +20,13 @@ require_relative './spline.rb'
 require_relative './shape.rb'
 require_relative './light.rb'
 
-OpenGL.load_lib
+require './opengl_lib'
+
+opengl_lib = OpenGLLib.discover
+
+OpenGL.load_lib(opengl_lib.file, opengl_lib.path)
 path = `pkg-config glfw3 --libs-only-L`.chomp.strip[2..-1]
-GLFW.load_lib('libglfw3.dylib', path)
+GLFW.load_lib(nil, path)
 
 include OpenGL
 include GLFW
